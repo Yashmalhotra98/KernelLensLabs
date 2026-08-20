@@ -164,8 +164,8 @@ function App() {
         <div className="brand-lockup">
           <div className="brand-mark">GPU</div>
           <div>
-            <p>Parallel systems laboratory</p>
-            <h1>Kernel / Scope</h1>
+            <p>Kuppannagari AI3 Lab</p>
+            <h1>KernelLens</h1>
           </div>
         </div>
 
