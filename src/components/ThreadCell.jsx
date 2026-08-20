@@ -27,7 +27,7 @@ export function ThreadCell({ thread, isSelected, onSelect }) {
       <span className="thread-state-dot" />
       <span className="thread-coordinate">({thread.coordinates.x},{thread.coordinates.y})</span>
       <strong>T{String(thread.threadId).padStart(2, '0')}</strong>
-      <small>lane {String(thread.laneId).padStart(2, '0')}</small>
+      <small>{thread.threadState}</small>
     </button>
   )
 }
