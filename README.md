@@ -6,7 +6,9 @@ An interactive React application for learning how a CUDA matrix-multiplication k
 
 ## Current learning slice
 
-The browser currently supports one deterministic lesson: a naïve 4 × 4 matrix-multiplication kernel. Learners can edit the CUDA source, run educational static analysis, and replay a fourteen-frame simulation with Run, Pause, Step, and Reset controls.
+The browser currently supports one deterministic lesson: a naïve 8 × 8 matrix multiplication split into four 4 × 4 thread blocks. A virtual scheduler maps those blocks onto three teaching SMs in two waves. Learners can edit the CUDA source, run educational static analysis, and replay the trace with Run, Pause, Step, and Reset controls.
+
+The visualization uses five semantic-zoom levels—Algorithm, GPU, Block, Warp, and Thread—so beginners reveal architectural detail gradually instead of seeing every subsystem simultaneously.
 
 The current analyzer is intentionally not presented as NVCC. It catches structural mistakes and common beginner errors inside the supported lesson subset. See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the architecture and limitations.
 
@@ -46,12 +48,18 @@ GitHub Actions runs the test, lint, and production-build checks for pushes and p
 
 Follow the one-time setup and branch-protection instructions in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-## Phase 1 component flow
+## Current learning flow
 
 ```text
-App
-  -> ThreadBlock (receives an array of thread descriptors)
-       -> ThreadCell (receives one thread ID and execution state)
+Algorithm: A × B → four output tiles
+    ↓
+GPU: four blocks → three virtual SMs → two scheduling waves
+    ↓
+Block: 4 × 4 threads own one output tile
+    ↓
+Warp: 16 allocated lanes inside a 32-lane warp
+    ↓
+Thread: index arithmetic, registers, operands, and addresses
 ```
 
 The trace is a deterministic educational model, not a cycle-accurate hardware measurement. Source is held only in React memory and is neither uploaded nor saved.

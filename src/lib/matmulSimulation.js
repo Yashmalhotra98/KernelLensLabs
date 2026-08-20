@@ -1,18 +1,15 @@
-export const MATRIX_SIZE = 4
+export const MATRIX_SIZE = 8
+export const BLOCK_SIZE = 4
 
-export const DEFAULT_MATRIX_A = [
-  1, 2, 3, 4,
-  5, 6, 7, 8,
-  2, 0, 1, 3,
-  4, 1, 2, 1,
-]
+export const DEFAULT_MATRIX_A = Array.from(
+  { length: MATRIX_SIZE * MATRIX_SIZE },
+  (_, index) => ((index * 5 + 3) % 13) - 4,
+)
 
-export const DEFAULT_MATRIX_B = [
-  1, 0, 0, 0,
-  0, 1, 0, 0,
-  0, 0, 1, 0,
-  0, 0, 0, 1,
-]
+export const DEFAULT_MATRIX_B = Array.from(
+  { length: MATRIX_SIZE * MATRIX_SIZE },
+  (_, index) => (Math.floor(index / MATRIX_SIZE) === index % MATRIX_SIZE ? 1 : 0),
+)
 
 function validateMatrix(matrix, size, name) {
   if (!Array.isArray(matrix) || matrix.length !== size * size) {
@@ -24,23 +21,30 @@ function validateMatrix(matrix, size, name) {
   }
 }
 
-function createThreads({ size, threadState, partialSums, k = null }) {
-  return Array.from({ length: size * size }, (_, threadId) => {
-    const row = Math.floor(threadId / size)
-    const column = threadId % size
+function validateBlock(block, gridSize) {
+  const isIntegerCoordinate = Number.isInteger(block?.x) && Number.isInteger(block?.y)
+  const isInsideGrid = block?.x >= 0 && block?.x < gridSize && block?.y >= 0 && block?.y < gridSize
+
+  if (!isIntegerCoordinate || !isInsideGrid) {
+    throw new Error(`Block coordinates must be inside the ${gridSize} × ${gridSize} grid.`)
+  }
+}
+
+function createThreads({ block, blockSize, threadState, partialSums, k = null }) {
+  return Array.from({ length: blockSize * blockSize }, (_, threadId) => {
+    const localRow = Math.floor(threadId / blockSize)
+    const localColumn = threadId % blockSize
+    const row = block.y * blockSize + localRow
+    const column = block.x * blockSize + localColumn
 
     return {
       threadId,
       threadState,
-      coordinates: { x: column, y: row, z: 0 },
+      coordinates: { x: localColumn, y: localRow, z: 0 },
+      outputCoordinates: { row, column },
       warpId: 0,
       laneId: threadId,
-      registers: {
-        row,
-        column,
-        k,
-        sum: partialSums[threadId],
-      },
+      registers: { row, column, k, sum: partialSums[threadId] },
     }
   })
 }
@@ -52,7 +56,8 @@ function createFrame({
   sourceKey,
   threadState,
   partialSums,
-  size,
+  block,
+  blockSize,
   k = null,
   activeMemory = { A: [], B: [], C: [] },
 }) {
@@ -62,13 +67,13 @@ function createFrame({
     description,
     sourceKey,
     k,
-    threads: createThreads({ size, threadState, partialSums, k }),
+    threads: createThreads({ block, blockSize, threadState, partialSums, k }),
     activeMemory,
-    currentC: [...partialSums],
+    currentTile: [...partialSums],
     warp: {
       warpId: 0,
       activeLaneMask: threadState === 'idle' ? '0x00000000' : '0x0000ffff',
-      laneCount: size * size,
+      laneCount: blockSize * blockSize,
     },
   }
 }
@@ -94,22 +99,32 @@ export function createMatmulSimulation({
   matrixA = DEFAULT_MATRIX_A,
   matrixB = DEFAULT_MATRIX_B,
   size = MATRIX_SIZE,
+  blockSize = BLOCK_SIZE,
+  block = { x: 0, y: 0 },
 } = {}) {
   validateMatrix(matrixA, size, 'Matrix A')
   validateMatrix(matrixB, size, 'Matrix B')
 
+  if (!Number.isInteger(blockSize) || blockSize <= 0 || size % blockSize !== 0) {
+    throw new Error('Block size must be a positive integer that evenly divides the matrix size.')
+  }
+
+  const gridSize = size / blockSize
+  validateBlock(block, gridSize)
+
   const frames = []
-  const partialSums = Array(size * size).fill(0)
+  const partialSums = Array(blockSize * blockSize).fill(0)
 
   frames.push(
     createFrame({
       phase: 'ready',
-      title: 'Ready to launch',
-      description: 'Analyze the kernel, then run or single-step the deterministic lesson trace.',
+      title: 'Block assigned',
+      description: `Block (${block.x}, ${block.y}) is resident and its 16 threads are ready to execute.`,
       sourceKey: null,
       threadState: 'idle',
       partialSums,
-      size,
+      block,
+      blockSize,
     }),
   )
 
@@ -117,11 +132,12 @@ export function createMatmulSimulation({
     createFrame({
       phase: 'index-row',
       title: 'Calculate output rows',
-      description: 'Each CUDA thread derives its matrix row from blockIdx, blockDim, and threadIdx.',
+      description: 'Each thread combines blockIdx.y and threadIdx.y to find its global output row.',
       sourceKey: 'index',
       threadState: 'compute',
       partialSums,
-      size,
+      block,
+      blockSize,
     }),
   )
 
@@ -129,11 +145,12 @@ export function createMatmulSimulation({
     createFrame({
       phase: 'index-column',
       title: 'Calculate output columns',
-      description: 'The x coordinate selects the output column owned by each thread.',
+      description: 'Each thread combines blockIdx.x and threadIdx.x to find its global output column.',
       sourceKey: 'column',
       threadState: 'compute',
       partialSums,
-      size,
+      block,
+      blockSize,
     }),
   )
 
@@ -141,11 +158,12 @@ export function createMatmulSimulation({
     createFrame({
       phase: 'bounds',
       title: 'Check matrix bounds',
-      description: 'All 16 threads are inside this 4 × 4 lesson matrix and remain active.',
+      description: 'Every thread in this block maps to a valid cell in the 8 × 8 output matrix.',
       sourceKey: 'bounds',
       threadState: 'compute',
       partialSums,
-      size,
+      block,
+      blockSize,
     }),
   )
 
@@ -153,28 +171,33 @@ export function createMatmulSimulation({
     const activeA = []
     const activeB = []
 
-    for (let index = 0; index < size; index += 1) {
-      activeA.push(index * size + k)
-      activeB.push(k * size + index)
+    for (let localIndex = 0; localIndex < blockSize; localIndex += 1) {
+      const globalRow = block.y * blockSize + localIndex
+      const globalColumn = block.x * blockSize + localIndex
+      activeA.push(globalRow * size + k)
+      activeB.push(k * size + globalColumn)
     }
 
     frames.push(
       createFrame({
         phase: 'read',
         title: `Read operands · k = ${k}`,
-        description: 'Threads read one A element and one B element from global memory.',
+        description: 'The warp requests A[row, k] and B[k, column] values from global memory.',
         sourceKey: 'read',
         threadState: 'read',
         partialSums,
-        size,
+        block,
+        blockSize,
         k,
         activeMemory: { A: activeA, B: activeB, C: [] },
       }),
     )
 
-    for (let threadId = 0; threadId < size * size; threadId += 1) {
-      const row = Math.floor(threadId / size)
-      const column = threadId % size
+    for (let threadId = 0; threadId < blockSize * blockSize; threadId += 1) {
+      const localRow = Math.floor(threadId / blockSize)
+      const localColumn = threadId % blockSize
+      const row = block.y * blockSize + localRow
+      const column = block.x * blockSize + localColumn
       partialSums[threadId] += matrixA[row * size + k] * matrixB[k * size + column]
     }
 
@@ -182,27 +205,33 @@ export function createMatmulSimulation({
       createFrame({
         phase: 'compute',
         title: `Accumulate products · k = ${k}`,
-        description: 'Each thread multiplies its operands and accumulates the result in a register.',
+        description: 'Each active lane performs one multiply-add and keeps its partial sum in a register.',
         sourceKey: 'compute',
         threadState: 'compute',
         partialSums,
-        size,
+        block,
+        blockSize,
         k,
       }),
     )
   }
 
-  const outputIndices = Array.from({ length: size * size }, (_, index) => index)
+  const outputIndices = Array.from({ length: blockSize * blockSize }, (_, threadId) => {
+    const localRow = Math.floor(threadId / blockSize)
+    const localColumn = threadId % blockSize
+    return (block.y * blockSize + localRow) * size + block.x * blockSize + localColumn
+  })
 
   frames.push(
     createFrame({
       phase: 'write',
-      title: 'Write matrix C',
-      description: 'Every thread stores its completed accumulator into global memory.',
+      title: 'Write output tile',
+      description: 'The block writes its completed 4 × 4 tile into matrix C.',
       sourceKey: 'write',
       threadState: 'write',
       partialSums,
-      size,
+      block,
+      blockSize,
       activeMemory: { A: [], B: [], C: outputIndices },
     }),
   )
@@ -210,24 +239,26 @@ export function createMatmulSimulation({
   frames.push(
     createFrame({
       phase: 'complete',
-      title: 'Kernel complete',
-      description: 'The simulated warp has finished and matrix C is available to the host.',
+      title: 'Block complete',
+      description: 'The SM releases this block’s resources and can accept another pending block.',
       sourceKey: null,
       threadState: 'complete',
       partialSums,
-      size,
+      block,
+      blockSize,
     }),
   )
 
   return {
-    engine: 'deterministic-matmul-model-v1',
+    engine: 'deterministic-matmul-model-v2',
     size,
-    block: { x: size, y: size, z: 1 },
-    grid: { x: 1, y: 1, z: 1 },
+    block: { x: blockSize, y: blockSize, z: 1 },
+    blockIndex: { ...block, z: 0 },
+    grid: { x: gridSize, y: gridSize, z: 1 },
     matrices: {
       A: [...matrixA],
       B: [...matrixB],
-      C: [...partialSums],
+      C: multiplyMatrices(matrixA, matrixB, size),
     },
     frames,
   }

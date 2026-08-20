@@ -1,13 +1,13 @@
 import { ThreadCell } from './ThreadCell.jsx'
 
-export function ThreadBlock({ blockId, threads, warp, selectedThreadId, onThreadSelect }) {
+export function ThreadBlock({ blockId, threads, selectedThreadId, onThreadSelect }) {
   const selectedThread = threads.find((thread) => thread.threadId === selectedThreadId) ?? threads[0]
 
   return (
     <article className="thread-block">
       <header className="thread-block-header">
         <div>
-          <p className="eyebrow">Streaming multiprocessor workgroup</p>
+          <p className="eyebrow">CUDA thread block</p>
           <h3>blockIdx [{blockId}]</h3>
         </div>
         <div className="block-metadata">
@@ -27,23 +27,6 @@ export function ThreadBlock({ blockId, threads, warp, selectedThreadId, onThread
         ))}
       </div>
 
-      <section className="warp-strip" aria-label="Warp 0 lane occupancy">
-        <div className="warp-strip-heading">
-          <span>Warp 00</span>
-          <span>active mask {warp.activeLaneMask}</span>
-        </div>
-        <div className="warp-lanes">
-          {Array.from({ length: 32 }, (_, lane) => (
-            <span
-              key={lane}
-              data-active={lane < threads.length ? 'true' : 'false'}
-              data-selected={lane === selectedThread.laneId ? 'true' : 'false'}
-              title={`Lane ${lane}: ${lane < threads.length ? 'allocated' : 'inactive'}`}
-            />
-          ))}
-        </div>
-      </section>
-
       <footer className="thread-inspector">
         <div>
           <span>Selected</span>
@@ -51,7 +34,7 @@ export function ThreadBlock({ blockId, threads, warp, selectedThreadId, onThread
         </div>
         <dl>
           <div><dt>threadIdx</dt><dd>({selectedThread.coordinates.x}, {selectedThread.coordinates.y}, 0)</dd></div>
-          <div><dt>warp / lane</dt><dd>{selectedThread.warpId} / {selectedThread.laneId}</dd></div>
+          <div><dt>global output</dt><dd>C[{selectedThread.registers.row}, {selectedThread.registers.column}]</dd></div>
           <div><dt>state</dt><dd>{selectedThread.threadState}</dd></div>
         </dl>
       </footer>
