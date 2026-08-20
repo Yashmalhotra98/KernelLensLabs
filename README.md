@@ -15,30 +15,41 @@ The current analyzer is intentionally not presented as NVCC. It catches structur
 ## Local development
 
 ```bash
-npm ci
-npm run dev
+make install
+make dev
 ```
 
 Open `http://localhost:5173`.
 
+The Makefile is a command wrapper. If `make` is unavailable, run the npm commands shown by `make help` directly.
+
 ## Production build
 
 ```bash
-npm run lint
-npm test
-npm run build
-npm run preview
+make verify
+make preview
 ```
 
 ## Docker
 
-Build and run the production Nginx image:
+Build and run the production Nginx image in the foreground:
 
 ```bash
-docker compose up --build
+make docker-up
 ```
 
-Open `http://localhost:8080`. Stop it with `docker compose down`.
+Open `http://localhost:8080`. Press `Ctrl+C`, then stop and remove the Compose container with `make docker-down`.
+
+For a background container:
+
+```bash
+make docker-up-detached
+make docker-status
+make docker-logs
+make docker-down
+```
+
+The equivalent raw Docker commands are `docker compose up --build`, `docker compose up --build --detach`, and `docker compose down`.
 
 The Docker image is suitable for container hosts such as Render. Vercel uses the Vite build directly (`npm run build`) and serves the generated `dist` directory.
 
