@@ -1,4 +1,4 @@
-# GPU Algorithm Visualizer
+# KernelLens
 
 [![CI](https://github.com/Yashmalhotra98/KernelLensLabs/actions/workflows/ci.yml/badge.svg)](https://github.com/Yashmalhotra98/KernelLensLabs/actions/workflows/ci.yml)
 

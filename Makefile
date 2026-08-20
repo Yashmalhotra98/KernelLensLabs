@@ -5,7 +5,7 @@ SHELL := /bin/sh
 
 help:
 	@printf '%s\n' \
-		'KernelLens Labs commands:' \
+		'KernelLens commands:' \
 		'  make install             Install exact npm dependencies' \
 		'  make dev                 Start Vite at http://localhost:5173' \
 		'  make test                Run unit tests' \
