@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react'
 
-export function SourceEditor({ source, activeLine, onChange, onRestore }) {
+export function SourceEditor({
+  source,
+  activeLine,
+  onChange,
+  onRestore,
+  filename = 'matmul.cu',
+  ariaLabel = 'Editable CUDA kernel',
+}) {
   const textareaRef = useRef(null)
   const [scrollTop, setScrollTop] = useState(0)
   const lineCount = source.split('\n').length
@@ -28,7 +35,7 @@ export function SourceEditor({ source, activeLine, onChange, onRestore }) {
       <header className="panel-heading">
         <div>
           <p className="eyebrow">Editable source</p>
-          <h2 id="source-heading" className="panel-title">matmul.cu</h2>
+          <h2 id="source-heading" className="panel-title">{filename}</h2>
         </div>
         <div className="flex items-center gap-3">
           <span className="mode-chip">CUDA C++ · lesson subset</span>
@@ -61,7 +68,7 @@ export function SourceEditor({ source, activeLine, onChange, onRestore }) {
           onKeyDown={handleKeyDown}
           onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
           style={{ backgroundImage }}
-          aria-label="Editable CUDA matrix multiplication kernel"
+          aria-label={ariaLabel}
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck="false"
