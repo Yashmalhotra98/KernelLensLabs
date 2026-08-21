@@ -1902,8 +1902,269 @@ button:disabled {
   background: var(--app-bg);
 }
 
+.header-tools {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.lesson-selector {
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface);
+  font-family: ui-monospace, monospace;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lesson-selector select {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.vector-phase-card,
+.compute-validation {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+
+.vector-phase-card h3,
+.vector-phase-card p,
+.vector-memory h3,
+.compute-validation h3,
+.compute-validation p {
+  margin: 0;
+}
+
+.vector-phase-card h3,
+.vector-memory h3,
+.compute-validation h3 {
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.vector-phase-card > div > p:last-child,
+.compute-validation > div > p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.phase-counter,
+.vector-memory-heading > span,
+.compute-validation small {
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vector-thread-stage {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(70px, 1fr));
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.vector-thread {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--idle);
+  background: var(--surface);
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.vector-thread[data-state="read"] {
+  border-top-color: var(--read);
+  background: color-mix(in srgb, var(--read) 7%, var(--surface));
+}
+
+.vector-thread[data-state="compute"] {
+  border-top-color: var(--compute);
+  background: color-mix(in srgb, var(--compute) 8%, var(--surface));
+  transform: translateY(-3px);
+}
+
+.vector-thread[data-state="write"] {
+  border-top-color: var(--write);
+  background: color-mix(in srgb, var(--write) 7%, var(--surface));
+}
+
+.vector-thread[data-state="complete"] {
+  border-top-color: var(--complete);
+  background: color-mix(in srgb, var(--complete) 7%, var(--surface));
+}
+
+.vector-thread > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.vector-thread span,
+.vector-thread small {
+  color: var(--faint);
+  font-family: ui-monospace, monospace;
+  font-size: 7px;
+  text-transform: uppercase;
+}
+
+.vector-thread strong {
+  color: var(--accent);
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.vector-thread small,
+.vector-thread code {
+  display: block;
+  margin-top: 8px;
+}
+
+.vector-thread code {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vector-memory {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface-inset);
+}
+
+.vector-memory-heading {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.vector-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 7px;
+}
+
+.vector-row-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.vector-row-label strong {
+  color: var(--accent);
+  font-family: ui-monospace, monospace;
+  font-size: 16px;
+}
+
+.vector-row-label span {
+  color: var(--faint);
+  font-family: ui-monospace, monospace;
+  font-size: 7px;
+  text-transform: uppercase;
+}
+
+.vector-cells {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(44px, 1fr));
+  gap: 5px;
+}
+
+.vector-cell {
+  position: relative;
+  display: grid;
+  min-height: 43px;
+  place-items: center;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  background: var(--surface);
+  font-family: ui-monospace, monospace;
+}
+
+.vector-cell span {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  color: var(--faint);
+  font-size: 6px;
+}
+
+.vector-cell strong {
+  font-size: 11px;
+}
+
+.vector-cell-active {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+.compute-validation {
+  margin-bottom: 18px;
+}
+
+.compute-validation small {
+  display: block;
+  max-width: 620px;
+  margin-top: 8px;
+  color: var(--warning);
+  line-height: 1.5;
+  text-transform: none;
+}
+
+.backend-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-width: max-content;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  background: var(--surface-raised);
+  font-family: ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.backend-toggle input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
 button:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible,
+input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -1941,6 +2202,10 @@ textarea:focus-visible {
 
   .warp-issue-card {
     grid-template-columns: 1fr;
+  }
+
+  .vector-thread-stage {
+    grid-template-columns: repeat(4, minmax(70px, 1fr));
   }
 }
 
@@ -1996,6 +2261,39 @@ textarea:focus-visible {
   .theme-toggle {
     min-height: 34px;
     font-size: 8px;
+  }
+
+  .header-tools {
+    min-width: 0;
+  }
+
+  .lesson-selector {
+    min-width: 118px;
+  }
+
+  .vector-phase-card,
+  .compute-validation,
+  .vector-memory-heading {
+    display: block;
+  }
+
+  .phase-counter,
+  .vector-memory-heading > span,
+  .backend-toggle {
+    display: inline-flex;
+    margin-top: 10px;
+  }
+
+  .vector-thread-stage {
+    grid-template-columns: repeat(2, minmax(70px, 1fr));
+  }
+
+  .vector-row {
+    grid-template-columns: 1fr;
+  }
+
+  .vector-cells {
+    overflow-x: auto;
   }
 
   .execution-controls {

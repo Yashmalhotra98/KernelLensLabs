@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
+import { AppHeader } from './components/AppHeader.jsx'
 import { DiagnosticsPanel } from './components/DiagnosticsPanel.jsx'
 import { ExecutionControls } from './components/ExecutionControls.jsx'
 import { GranularityControl } from './components/GranularityControl.jsx'
 import { LessonCanvas } from './components/LessonCanvas.jsx'
 import { SourceEditor } from './components/SourceEditor.jsx'
+import { VectorAddExperience } from './components/VectorAddExperience.jsx'
 import { analyzeCudaSource } from './lib/cudaAnalyzer.js'
 import { DEFAULT_CUDA_SOURCE } from './lib/defaultCudaSource.js'
 import { createMatmulSimulation } from './lib/matmulSimulation.js'
 import { VISUALIZATION_LEVELS } from './lib/visualizationLevels.js'
+import { createKernelLensRuntime } from './runtime/createKernelLensRuntime.js'
 import {
   getBlockLocalFrameIndex,
   getVirtualGpuFrame,
@@ -25,6 +28,7 @@ const BLOCK_SIMULATIONS = new Map(
     createMatmulSimulation({ block: { x: block.coordinates.x, y: block.coordinates.y } }),
   ]),
 )
+const LESSONS = createKernelLensRuntime().listLessons()
 
 const LEVEL_COPY = {
   algorithm: {
@@ -49,7 +53,12 @@ const LEVEL_COPY = {
   },
 }
 
-function App() {
+function MatmulExperience({
+  theme,
+  onThemeChange,
+  selectedLessonId,
+  onLessonChange,
+}) {
   const [source, setSource] = useState(DEFAULT_CUDA_SOURCE)
   const [analysis, setAnalysis] = useState(null)
   const [frameIndex, setFrameIndex] = useState(0)
@@ -57,7 +66,6 @@ function App() {
   const [level, setLevel] = useState('algorithm')
   const [selectedBlockId, setSelectedBlockId] = useState(0)
   const [selectedThreadId, setSelectedThreadId] = useState(0)
-  const [theme, setTheme] = useState('dark')
 
   const selectedBlock = VIRTUAL_BLOCKS.find((block) => block.blockId === selectedBlockId) ?? VIRTUAL_BLOCKS[0]
   const phaseFrame = PHASE_SIMULATION.frames[frameIndex % BLOCK_FRAME_COUNT]
@@ -160,16 +168,8 @@ function App() {
 
   return (
     <div className="app-shell" data-theme={theme}>
-      <header className="app-header">
-        <div className="brand-lockup">
-          <div className="brand-mark">GPU</div>
-          <div>
-            <p>Kuppannagari AI3 Lab</p>
-            <h1>KernelLens</h1>
-          </div>
-        </div>
-
-        <ExecutionControls
+      <AppHeader
+        controls={<ExecutionControls
           status={executionStatus}
           isPlaying={isPlaying}
           frameIndex={frameIndex}
@@ -179,19 +179,13 @@ function App() {
           onPause={() => setIsPlaying(false)}
           onStep={handleStep}
           onReset={handleReset}
-        />
-
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-          aria-pressed={theme === 'light'}
-        >
-          <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
-          {theme === 'dark' ? 'Light' : 'Dark'}
-        </button>
-      </header>
+        />}
+        lessons={LESSONS}
+        selectedLessonId={selectedLessonId}
+        onLessonChange={onLessonChange}
+        theme={theme}
+        onThemeChange={onThemeChange}
+      />
 
       <main className="workspace-grid">
         <div className="source-column">
@@ -243,6 +237,24 @@ function App() {
       </footer>
     </div>
   )
+}
+
+function App() {
+  const [selectedLessonId, setSelectedLessonId] = useState('matmul.naive')
+  const [theme, setTheme] = useState('dark')
+  const sharedProps = {
+    theme,
+    onThemeChange: () => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark'),
+    lessons: LESSONS,
+    selectedLessonId,
+    onLessonChange: setSelectedLessonId,
+  }
+
+  if (selectedLessonId === 'vector-add.basic') {
+    return <VectorAddExperience {...sharedProps} />
+  }
+
+  return <MatmulExperience {...sharedProps} />
 }
 
 export default App
