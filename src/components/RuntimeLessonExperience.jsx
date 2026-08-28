@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AppHeader } from './AppHeader.jsx'
 import { DiagnosticsPanel } from './DiagnosticsPanel.jsx'
 import { ExecutionControls } from './ExecutionControls.jsx'
+import { GranularityControl } from './GranularityControl.jsx'
 import { RuntimeLessonCanvas } from './RuntimeLessonCanvas.jsx'
 import { SourceEditor } from './SourceEditor.jsx'
 import { createKernelLensRuntime } from '../runtime/createKernelLensRuntime.js'
@@ -27,6 +28,8 @@ export function RuntimeLessonExperience({
   const [isPlaying, setIsPlaying] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [preferWebGpu, setPreferWebGpu] = useState(true)
+  const [level, setLevel] = useState('algorithm')
+  const [selectedThreadId, setSelectedThreadId] = useState(0)
 
   const recording = result?.recording ?? previewRecording
   const frame = recording.frames[frameIndex]
@@ -142,7 +145,18 @@ export function RuntimeLessonExperience({
             <div className="fidelity-badge"><span /> {lesson.view.fidelity}</div>
           </div>
 
-          <RuntimeLessonCanvas lesson={lesson} frame={frame} result={result} preferWebGpu={preferWebGpu} onPreferWebGpuChange={setPreferWebGpu} />
+          <GranularityControl value={level} onChange={setLevel} />
+
+          <RuntimeLessonCanvas
+            lesson={lesson}
+            frame={frame}
+            result={result}
+            level={level}
+            selectedThreadId={selectedThreadId}
+            onThreadSelect={setSelectedThreadId}
+            preferWebGpu={preferWebGpu}
+            onPreferWebGpuChange={setPreferWebGpu}
+          />
 
           <footer className="execution-footnote">
             <span>Trace: {recording.engine}</span>
