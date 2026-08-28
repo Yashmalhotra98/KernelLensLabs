@@ -35,29 +35,29 @@ button:disabled {
 }
 
 .app-shell {
-  --app-bg: #07090b;
-  --surface: #090c0f;
-  --surface-alt: #0d1115;
-  --surface-raised: #11171c;
-  --surface-inset: #06080a;
-  --border: rgb(255 255 255 / 0.11);
-  --border-strong: rgb(255 255 255 / 0.2);
-  --text: #f5f5f4;
-  --text-soft: #d4d4d8;
-  --muted: #808691;
-  --faint: #525862;
-  --accent: #bef264;
-  --accent-contrast: #111809;
-  --source-line-active: rgb(190 242 100 / 0.08);
-  --grid-line: rgb(255 255 255 / 0.025);
-  --idle: #71717a;
+  --app-bg: #06111f;
+  --surface: #0a192b;
+  --surface-alt: #0e2238;
+  --surface-raised: #132d47;
+  --surface-inset: #040c17;
+  --border: rgb(148 190 221 / 0.2);
+  --border-strong: rgb(148 190 221 / 0.38);
+  --text: #f3f8fc;
+  --text-soft: #d4e3ef;
+  --muted: #9db4c8;
+  --faint: #718da7;
+  --accent: #22d3ee;
+  --accent-contrast: #04202b;
+  --source-line-active: rgb(34 211 238 / 0.13);
+  --grid-line: rgb(148 190 221 / 0.055);
+  --idle: #7890a6;
   --read: #38bdf8;
-  --compute: #bef264;
-  --write: #fb923c;
+  --compute: #fbbf24;
+  --write: #f472b6;
   --complete: #34d399;
   --danger: #fb7185;
-  --warning: #fbbf24;
-  --shadow: 0 28px 90px rgb(0 0 0 / 0.38);
+  --warning: #f59e0b;
+  --shadow: 0 28px 90px rgb(1 9 20 / 0.56);
 
   min-height: 100vh;
   color: var(--text);
@@ -66,29 +66,29 @@ button:disabled {
 }
 
 .app-shell[data-theme="light"] {
-  --app-bg: #e9ede5;
-  --surface: #f8faf5;
-  --surface-alt: #eef2ea;
+  --app-bg: #eaf3f9;
+  --surface: #fafdff;
+  --surface-alt: #f0f7fb;
   --surface-raised: #ffffff;
-  --surface-inset: #e5eae0;
-  --border: rgb(31 45 25 / 0.14);
-  --border-strong: rgb(31 45 25 / 0.25);
-  --text: #182015;
-  --text-soft: #303a2c;
-  --muted: #697164;
-  --faint: #858d80;
-  --accent: #4d7c0f;
-  --accent-contrast: #f7fee7;
-  --source-line-active: rgb(77 124 15 / 0.1);
-  --grid-line: rgb(31 45 25 / 0.055);
-  --idle: #71717a;
-  --read: #0284c7;
-  --compute: #4d7c0f;
-  --write: #c2410c;
+  --surface-inset: #dceaf3;
+  --border: rgb(20 64 95 / 0.18);
+  --border-strong: rgb(20 64 95 / 0.36);
+  --text: #0b2135;
+  --text-soft: #28455e;
+  --muted: #4f6d86;
+  --faint: #718ba1;
+  --accent: #0e7490;
+  --accent-contrast: #f4fdff;
+  --source-line-active: rgb(14 116 144 / 0.13);
+  --grid-line: rgb(20 64 95 / 0.075);
+  --idle: #647d93;
+  --read: #0369a1;
+  --compute: #b45309;
+  --write: #be185d;
   --complete: #047857;
   --danger: #be123c;
   --warning: #a16207;
-  --shadow: 0 24px 70px rgb(47 62 39 / 0.14);
+  --shadow: 0 24px 70px rgb(28 66 95 / 0.18);
 }
 
 .app-shell ::selection {
