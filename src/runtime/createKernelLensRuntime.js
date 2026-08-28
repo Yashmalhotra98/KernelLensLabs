@@ -1,3 +1,4 @@
+import { advancedLessons } from '../lessons/advancedLessons.js'
 import { vectorAddLesson } from '../lessons/vectorAddLesson.js'
 import { cpuReferenceAdapter } from './adapters/cpuReferenceAdapter.js'
 
@@ -6,13 +7,12 @@ const LESSONS = [
     id: 'matmul.naive',
     title: 'Naïve Matrix Multiplication',
     shortTitle: 'Naïve MatMul',
+    category: 'Matrix operations',
     description: 'Existing deterministic block, warp, thread, and memory simulation.',
     executionKind: 'legacy-deterministic',
   },
-  {
-    ...vectorAddLesson,
-    executionKind: 'lesson-runtime',
-  },
+  vectorAddLesson,
+  ...advancedLessons,
 ]
 
 function outputsMatch(actual, expected, tolerance = 1e-5) {
@@ -22,11 +22,12 @@ function outputsMatch(actual, expected, tolerance = 1e-5) {
 
 export function createKernelLensRuntime({ webGpuAdapter = null } = {}) {
   function listLessons() {
-    return LESSONS.map(({ id, title, shortTitle, description, executionKind }) => ({
+    return LESSONS.map(({ id, title, shortTitle, description, category, executionKind }) => ({
       id,
       title,
       shortTitle,
       description,
+      category,
       executionKind,
     }))
   }
@@ -34,10 +35,7 @@ export function createKernelLensRuntime({ webGpuAdapter = null } = {}) {
   function openLesson(lessonId) {
     const lesson = LESSONS.find((item) => item.id === lessonId)
 
-    if (!lesson) {
-      throw new Error(`Unknown lesson '${lessonId}'.`)
-    }
-
+    if (!lesson) throw new Error(`Unknown lesson '${lessonId}'.`)
     if (lesson.executionKind !== 'lesson-runtime') {
       throw new Error(`Lesson '${lessonId}' still uses the legacy simulator.`)
     }
@@ -47,20 +45,18 @@ export function createKernelLensRuntime({ webGpuAdapter = null } = {}) {
 
       async run({ source = lesson.source, preferWebGpu = true } = {}) {
         const analysis = lesson.analyze(source)
+        if (!analysis.canSimulate) return { status: 'rejected', analysis }
 
-        if (!analysis.canSimulate) {
-          return { status: 'rejected', analysis }
-        }
-
-        const request = {
-          operation: 'vector-add',
-          inputs: lesson.inputs,
-        }
+        const request = lesson.computeRequest
         const reference = await cpuReferenceAdapter.execute(request)
         let computed = reference
         let fallbackReason = null
+        const canUseWebGpu = preferWebGpu
+          && lesson.capabilities.webGpuValidation
+          && webGpuAdapter
+          && await webGpuAdapter.isAvailable()
 
-        if (preferWebGpu && webGpuAdapter && await webGpuAdapter.isAvailable()) {
+        if (canUseWebGpu) {
           try {
             computed = await webGpuAdapter.execute(request)
           } catch (error) {

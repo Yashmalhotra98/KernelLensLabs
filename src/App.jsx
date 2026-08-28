@@ -4,8 +4,8 @@ import { DiagnosticsPanel } from './components/DiagnosticsPanel.jsx'
 import { ExecutionControls } from './components/ExecutionControls.jsx'
 import { GranularityControl } from './components/GranularityControl.jsx'
 import { LessonCanvas } from './components/LessonCanvas.jsx'
+import { RuntimeLessonExperience } from './components/RuntimeLessonExperience.jsx'
 import { SourceEditor } from './components/SourceEditor.jsx'
-import { VectorAddExperience } from './components/VectorAddExperience.jsx'
 import { analyzeCudaSource } from './lib/cudaAnalyzer.js'
 import { DEFAULT_CUDA_SOURCE } from './lib/defaultCudaSource.js'
 import { createMatmulSimulation } from './lib/matmulSimulation.js'
@@ -233,7 +233,7 @@ function MatmulExperience({
 
       <footer className="app-footer">
         <span>Browser-only lesson · source is never uploaded or saved</span>
-        <span>Supported now: naïve 8 × 8 matrix multiplication · simulated scheduling</span>
+        <span>{LESSONS.length} guided lessons · deterministic traces · CPU-verified mathematics</span>
       </footer>
     </div>
   )
@@ -250,8 +250,8 @@ function App() {
     onLessonChange: setSelectedLessonId,
   }
 
-  if (selectedLessonId === 'vector-add.basic') {
-    return <VectorAddExperience {...sharedProps} />
+  if (selectedLessonId !== 'matmul.naive') {
+    return <RuntimeLessonExperience key={selectedLessonId} {...sharedProps} />
   }
 
   return <MatmulExperience {...sharedProps} />
