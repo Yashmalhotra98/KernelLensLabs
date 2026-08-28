@@ -1,13 +1,16 @@
-function VectorRow({ label, values, active, operation }) {
+function MemorySpace({ space }) {
   return (
-    <div className="vector-row">
+    <div className={space.active ? 'vector-row memory-space-active' : 'vector-row'}>
       <div className="vector-row-label">
-        <strong>{label}</strong>
-        <span>{operation}</span>
+        <div>
+          <strong>{space.label}</strong>
+          <small>{space.kind}</small>
+        </div>
+        <span>{space.operation}</span>
       </div>
       <div className="vector-cells">
-        {values.map((value, index) => (
-          <div key={`${label}-${index}`} className={active ? 'vector-cell vector-cell-active' : 'vector-cell'}>
+        {space.values.map((value, index) => (
+          <div key={`${space.id}-${index}`} className={space.active ? 'vector-cell vector-cell-active' : 'vector-cell'}>
             <span>{index}</span>
             <strong>{value ?? '—'}</strong>
           </div>
@@ -17,55 +20,51 @@ function VectorRow({ label, values, active, operation }) {
   )
 }
 
-export function VectorAddCanvas({
+export function RuntimeLessonCanvas({
+  lesson,
   frame,
-  inputs,
   result,
   preferWebGpu,
   onPreferWebGpuChange,
 }) {
-  const output = result?.output ?? Array.from({ length: inputs.a.length }, () => null)
   const validation = result?.validation
+  const supportsWebGpu = lesson.capabilities.webGpuValidation
 
   return (
     <>
       <div className="vector-phase-card">
         <div>
-          <p className="eyebrow">Current instruction · {frame.phase}</p>
+          <p className="eyebrow">Current event · {frame.phase}</p>
           <h3>{frame.title}</h3>
           <p>{frame.description}</p>
+          {frame.insight ? <aside className="lesson-insight">Architecture note · {frame.insight}</aside> : null}
         </div>
-        <span className="phase-counter">{frame.threads.length} logical threads</span>
+        <span className="phase-counter">{frame.threads.length} logical lanes</span>
       </div>
 
-      <section className="vector-thread-stage" aria-label="Vector addition logical threads">
+      <section className="vector-thread-stage" aria-label={`${lesson.title} logical threads`}>
         {frame.threads.map((thread) => (
           <article key={thread.threadId} className="vector-thread" data-state={thread.state}>
             <div>
-              <span>Thread</span>
+              <span>Lane</span>
               <strong>{thread.threadId}</strong>
             </div>
-            <small>index = {thread.index}</small>
-            <code>
-              {thread.result === null
-                ? `${thread.a} + ${thread.b}`
-                : `${thread.a} + ${thread.b} = ${thread.result}`}
-            </code>
+            <small>{thread.label}</small>
+            <small>{thread.detail}</small>
+            <code>{thread.result === null ? thread.expression : `${thread.expression} → ${thread.result}`}</code>
           </article>
         ))}
       </section>
 
-      <section className="vector-memory" aria-labelledby="vector-memory-heading">
+      <section className="vector-memory" aria-labelledby="runtime-memory-heading">
         <div className="vector-memory-heading">
           <div>
-            <p className="eyebrow">Global memory</p>
-            <h3 id="vector-memory-heading">Adjacent threads, adjacent addresses</h3>
+            <p className="eyebrow">Memory hierarchy</p>
+            <h3 id="runtime-memory-heading">Data movement for this event</h3>
           </div>
-          <span>Coalesced 1-D access pattern</span>
+          <span>Highlighted rows are active now</span>
         </div>
-        <VectorRow label="A" values={inputs.a} active={frame.phase === 'read'} operation="read" />
-        <VectorRow label="B" values={inputs.b} active={frame.phase === 'read'} operation="read" />
-        <VectorRow label="C" values={output} active={frame.phase === 'write' || frame.phase === 'complete'} operation="write" />
+        {frame.memorySpaces.map((space) => <MemorySpace key={space.id} space={space} />)}
       </section>
 
       <section className="compute-validation" aria-labelledby="compute-validation-heading">
@@ -82,13 +81,14 @@ export function VectorAddCanvas({
           {validation?.fallbackReason ? <small>WebGPU fallback: {validation.fallbackReason}</small> : null}
         </div>
 
-        <label className="backend-toggle">
+        <label className={supportsWebGpu ? 'backend-toggle' : 'backend-toggle backend-toggle-disabled'}>
           <input
             type="checkbox"
-            checked={preferWebGpu}
+            checked={supportsWebGpu && preferWebGpu}
+            disabled={!supportsWebGpu}
             onChange={(event) => onPreferWebGpuChange(event.target.checked)}
           />
-          <span>Prefer WebGPU when available</span>
+          <span>{supportsWebGpu ? 'Prefer WebGPU when available' : 'CPU validation for this lesson'}</span>
         </label>
       </section>
     </>

@@ -2,15 +2,25 @@
 
 [![CI](https://github.com/Yashmalhotra98/KernelLensLabs/actions/workflows/ci.yml/badge.svg)](https://github.com/Yashmalhotra98/KernelLensLabs/actions/workflows/ci.yml)
 
-An interactive React application for learning how a CUDA matrix-multiplication kernel maps work onto thread blocks, warps, threads, registers, and global memory.
+An interactive React application for learning how CUDA algorithms map work onto thread blocks, warps, threads, and the GPU memory hierarchy.
 
-## Current learning slice
+## Current curriculum
 
-The browser currently supports one deterministic lesson: a naïve 8 × 8 matrix multiplication split into four 4 × 4 thread blocks. A virtual scheduler maps those blocks onto three teaching SMs in two waves. Learners can edit the CUDA source, run educational static analysis, and replay the trace with Run, Pause, Step, and Reset controls.
+The browser provides 14 deterministic lessons:
+
+- Foundations: Vector Addition and Unified Memory Vector Addition
+- Memory: Coalesced versus strided access
+- Matrix operations: Naïve and Blocked Matrix Multiplication
+- CUDA libraries: cuBLAS AXPY and GEMM semantics
+- Collective algorithms: Shared-memory Sum Reduction
+- Parallel sorting: Bitonic Sort with six compare–exchange stages
+- Convolution: Naïve, Constant-Memory, Tiled, and Cache-Simplified 1-D Convolution plus Naïve 2-D Convolution
+
+Learners can edit each sample, run lesson-aware analysis, and replay its trace with Run, Pause, Step, and Reset. Every plugin lesson computes a trusted CPU reference. Compatible vector lessons can additionally validate their output through WebGPU when the browser supports it.
 
 The visualization uses five semantic-zoom levels—Algorithm, GPU, Block, Warp, and Thread—so beginners reveal architectural detail gradually instead of seeing every subsystem simultaneously.
 
-The current analyzer is intentionally not presented as NVCC. It catches structural mistakes and common beginner errors inside the supported lesson subset. See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the architecture and limitations.
+The analyzer is intentionally not presented as NVCC. It checks required structures inside each supported lesson. Unified Memory migration, cache transactions, and cuBLAS internals are explicitly labelled educational models rather than hardware measurements. See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the architecture and limitations.
 
 ## Local development
 
@@ -59,18 +69,21 @@ GitHub Actions runs the test, lint, and production-build checks for pushes and p
 
 Follow the one-time setup and branch-protection instructions in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-## Current learning flow
+## Runtime learning flow
 
 ```text
-Algorithm: A × B → four output tiles
+Editable lesson source
     ↓
-GPU: four blocks → three virtual SMs → two scheduling waves
+Lesson-specific analyzer
     ↓
-Block: 4 × 4 threads own one output tile
+CPU reference computation
     ↓
-Warp: 16 allocated lanes inside a 32-lane warp
+Deterministic teaching frames
     ↓
-Thread: index arithmetic, registers, operands, and addresses
+Shared React trace player
+    ├── logical lanes
+    ├── global/shared/constant/managed memory
+    └── computed-output validation
 ```
 
-The trace is a deterministic educational model, not a cycle-accurate hardware measurement. Source is held only in React memory and is neither uploaded nor saved.
+The specialized naïve-matmul lesson retains its Algorithm → GPU → Block → Warp → Thread semantic zoom and three-SM scheduling model. Every trace is educational rather than cycle-accurate. Source is held only in React memory and is neither uploaded nor saved.

@@ -2,6 +2,8 @@
 
 ## ADR-001: Browser-first deterministic CUDA lessons
 
+Status: Superseded in part by ADR-003 for multi-lesson composition.
+
 ### Context
 
 The project teaches beginner CUDA programmers how source code maps to blocks, warps, threads, registers, and memory. Real GPU execution is not required for the core learning experience, and arbitrary native-code execution would introduce cost and a significant security boundary.
@@ -75,3 +77,55 @@ The first multi-SM lesson uses an 8 × 8 output, four 4 × 4 blocks, and three v
 - Lessons introduce multiple resident blocks, occupancy limits, or concurrent kernels.
 - User testing shows that five levels are too coarse or too detailed.
 - A hardware trace mode can supply measured SM assignments without compromising the deterministic lesson mode.
+
+## ADR-003: Data-driven lesson plugins and independent validation
+
+### Context
+
+The curriculum now includes vector operations, managed memory, coalescing, blocked matrix multiplication, reductions, parallel bitonic sorting, convolutions, and cuBLAS calls. Creating a React screen and execution branch for every algorithm would duplicate playback, diagnostics, memory rendering, and fallback behavior.
+
+Browser APIs also cannot expose CUDA Unified Memory faults, real cuBLAS kernels, NVIDIA cache transactions, or physical SM scheduling. Numerical correctness and architectural explanation therefore require different evidence.
+
+### Decision
+
+Represent every new curriculum item as a lesson plugin with one shared contract:
+
+```text
+Lesson definition
+    ├── metadata and sample source
+    ├── lesson-aware analyzer
+    ├── fixed beginner-sized compute request
+    ├── topology and memory-space descriptions
+    └── deterministic teaching stages
+            ↓
+Generic lesson runtime
+    ├── CPU reference adapter
+    ├── optional compatible WebGPU adapter
+    └── versioned recording frames
+            ↓
+Generic React experience and canvas
+```
+
+The CPU reference determines the expected mathematical result. WebGPU is an optional independent validator only for operations with a compatible adapter. It never supplies the teaching trace. The original naïve-matmul semantic-zoom experience remains specialized until its richer GPU/block/warp/thread data can be represented without losing information.
+
+### Alternatives considered
+
+- One React component per algorithm was rejected because playback and memory UI would drift across duplicated implementations.
+- One universal CUDA interpreter was deferred because safely and accurately interpreting CUDA C++ is outside the current browser-only scope.
+- Presenting WebGPU execution as CUDA was rejected because WGSL execution cannot expose NVIDIA-specific scheduling or memory behavior.
+- Omitting cuBLAS and Unified Memory was rejected because their programming models are valuable even when their native implementations cannot run in the browser.
+
+### Consequences
+
+- New lessons share selection, analysis, playback, validation, and memory rendering.
+- Lesson plugins remain explicit and inspectable; adding an algorithm requires data and trace semantics rather than a new application shell.
+- Small fixed inputs make traces readable and reference tests deterministic.
+- CPU validation proves mathematics but not CUDA performance or synchronization correctness on hardware.
+- Managed-memory movement, cache behavior, and library internals must remain visibly labelled conceptual models.
+
+### Revisit when
+
+- Tree-sitter or another parser replaces lesson-pattern analysis.
+- WebGPU adapters are added for matrix multiplication, reduction, or convolution.
+- A secure optional NVRTC/cuBLAS service can return authoritative diagnostics or hardware results.
+- The specialized naïve-matmul trace can migrate to the shared recording schema without losing semantic zoom.
